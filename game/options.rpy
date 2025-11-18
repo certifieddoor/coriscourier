@@ -18,7 +18,7 @@ define config.name = _("coriscourier")
 ## Determines if the title given above is shown on the main menu screen. Set
 ## this to False to hide the title.
 
-define gui.show_name = True
+define gui.show_name = False 
 
 
 ## The version of the game.
@@ -30,6 +30,7 @@ define config.version = "1.0"
 ## triple-quotes, and leave a blank line between paragraphs.
 
 define gui.about = _p("""
+The starving creature you found on the streets is actually a deity of creation who needs to eat art to survive. (else, it threatens to consume the world)
 """)
 
 
@@ -46,9 +47,9 @@ define build.name = "coriscourier"
 ## to the player by default. Setting one of these to False will hide the
 ## appropriate mixer.
 
-define config.has_sound = True
+define config.has_sound = False
 define config.has_music = True
-define config.has_voice = True
+define config.has_voice = False
 
 
 ## To allow the user to play a test sound on the sound or voice channel,
@@ -72,14 +73,14 @@ define config.has_voice = True
 ## transition should be used.
 
 ## Entering or exiting the game menu.
-
-define config.enter_transition = dissolve
-define config.exit_transition = dissolve
+define dissolvefast = Dissolve(0.2)
+define config.enter_transition = dissolvefast
+define config.exit_transition = dissolvefast
 
 
 ## Between screens of the game menu.
 
-define config.intra_transition = dissolve
+define config.intra_transition = dissolvefast
 
 
 ## A transition that is used after a game has been loaded.
@@ -120,7 +121,7 @@ define config.window_hide_transition = Dissolve(.2)
 ## Controls the default text speed. The default, 0, is infinite, while any
 ## other number is the number of characters per second to type out.
 
-default preferences.text_cps = 0
+default preferences.text_cps = 100
 
 
 ## The default auto-forward delay. Larger numbers lead to longer waits, with 0

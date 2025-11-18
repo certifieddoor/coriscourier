@@ -4,6 +4,97 @@
 
 init offset = -1
 
+# trackcursor code from
+# https://github.com/aquapaulo/renpy-main-menu-parallax/blob/main/CODE.md
+# and https://lemmasoft.renai.us/forums/viewtopic.php?t=28495
+init python:
+    import pygame 
+    import math 
+    class TrackCursor(renpy.Displayable):
+
+        def __init__(self, child, paramod, **kwargs):
+
+            super(TrackCursor, self).__init__()
+
+            self.child = renpy.displayable(child)
+            self.x = 0
+            self.y = 0
+            self.actual_x = 0
+            self.actual_y = 0
+
+            self.paramod = paramod
+            self.last_st = 0
+
+
+
+        def render(self, width, height, st, at):
+
+            rv = renpy.Render(width, height)
+            minimum_speed = 0.5
+            maximum_speed = 3
+            speed = 1 + minimum_speed
+            mouse_distance_x = min(maximum_speed, max(minimum_speed, (self.x - self.actual_x)))
+            mouse_distance_y = (self.y - self.actual_y)
+            if self.x is not None:
+                st_change = st - self.last_st
+
+                self.last_st = st
+                self.actual_x = math.floor(self.actual_x + ((self.x - self.actual_x) * speed * (st_change )) * self.paramod)
+                self.actual_y = math.floor(self.actual_y + ((self.y - self.actual_y) * speed * (st_change)) * self.paramod)
+
+
+                if mouse_distance_y <= minimum_speed:
+                    mouse_distance_y = minimum_speed
+                elif mouse_distance_y >= maximum_speed:
+                    mouse_distance_y = maximum_speed
+
+                cr = renpy.render(self.child, width, height, st, at)
+                cw, ch = cr.get_size()
+                rv.blit(cr, (self.actual_x, self.actual_y))
+
+
+
+            renpy.redraw(self, 0)
+            return rv
+
+        def event(self, ev, x, y, st):
+            hover = ev.type == pygame.MOUSEMOTION
+            click = ev.type == pygame.MOUSEBUTTONDOWN
+            mousefocus = pygame.mouse.get_focused()
+            if hover:
+
+                if (x != self.x) or (y != self.y) or click:
+                    self.x = -x /self.paramod
+                    self.y = -y /self.paramod
+
+    # class TrackCursor(renpy.Displayable):
+
+    #     def __init__(self, child):
+
+    #         super(TrackCursor, self).__init__()
+
+    #         self.child = renpy.displayable(child)
+
+    #         self.x = None
+    #         self.y = None
+
+    #     def render(self, width, height, st, at):
+
+    #         rv = renpy.Render(width, height)
+
+    #         if self.x is not None:
+    #             cr = renpy.render(self.child, width, height, st, at)
+    #             cw, ch = cr.get_size()
+    #             rv.blit(cr, (self.x - cw / 2, self.y - ch / 2))
+
+    #         return rv
+
+    #     def event(self, ev, x, y, st):
+
+    #         if (x != self.x) or (y != self.y):
+    #             self.x = x
+    #             self.y = y
+    #             renpy.redraw(self, 0)
 
 ################################################################################
 ## Styles
@@ -42,8 +133,8 @@ style prompt_text is gui_text:
 
 style bar:
     ysize gui.bar_size
-    left_bar Frame("gui/bar/left.png", gui.bar_borders, tile=gui.bar_tile)
-    right_bar Frame("gui/bar/right.png", gui.bar_borders, tile=gui.bar_tile)
+    left_bar Frame("images/barstuff/bar full.png", gui.bar_borders, tile=gui.bar_tile)
+    right_bar Frame("images/barstuff/bar empty.png", gui.bar_borders, tile=gui.bar_tile)
 
 style vbar:
     xsize gui.bar_size
@@ -62,8 +153,13 @@ style vscrollbar:
 
 style slider:
     ysize gui.slider_size
-    base_bar Frame("gui/slider/horizontal_[prefix_]bar.png", gui.slider_borders, tile=gui.slider_tile)
+    left_bar Frame("images/barstuff/bar full.png", gui.slider_borders, tile = gui.bar_tile)
+    right_bar Frame("images/barstuff/bar empty.png", gui.slider_borders, tile = gui.bar_tile)
+    # base_bar Frame("gui/slider/horizontal_[prefix_]bar.png", gui.slider_borders, tile=gui.slider_tile)
     thumb "gui/slider/horizontal_[prefix_]thumb.png"
+
+    # base_bar Frame("gui/slider/horizontal_[prefix_]bar.png", gui.slider_borders, tile=gui.slider_tile)
+    # thumb "gui/slider/horizontal_[prefix_]thumb.png"
 
 style vslider:
     xsize gui.slider_size
@@ -344,6 +440,8 @@ style navigation_button_text:
     properties gui.text_properties("navigation_button")
 
 
+
+
 ## Main Menu screen ############################################################
 ##
 ## Used to display the main menu when Ren'Py starts.
@@ -356,6 +454,11 @@ screen main_menu():
     tag menu
 
     add gui.main_menu_background
+    add TrackCursor("gui/titlemm.png", 35)
+    add TrackCursor("gui/hungrymm.png",15)
+    add TrackCursor("gui/corimm.png",10)
+    add TrackCursor("gui/particlesmm.png",5)
+    add TrackCursor("gui/particles2mm.png", 3)
 
     ## This empty frame darkens the main menu.
     # frame:
@@ -820,7 +923,7 @@ screen preferences():
 
                     bar value Preference("auto-forward time")
 
-                vbox:
+                vbox:                  
 
                     if config.has_music:
                         label _("Music Volume")
@@ -925,6 +1028,7 @@ style slider_button_text:
 
 style slider_vbox:
     xsize 675
+
 
 
 ## History screen ##############################################################
@@ -1664,3 +1768,119 @@ style slider_vbox:
 style slider_slider:
     variant "small"
     xsize 900
+
+
+            
+# screen bars
+# style stats_bar:
+
+#     right_bar Frame("images/barstuff/bar empty.png", 10, 10)
+#     left_bar Frame("images/barstuff/bar full.png", 10, 10)
+#     thumb "images/barstuff/bar thing.png"
+#     thumb_offset 2
+#     xsize(30)
+#     ysize(10)
+
+# screen bars:
+#     style_prefix "stats_bar"
+
+#     bar value AnimatedValue(p, 7, 0.5)
+
+# style caffbar:
+#     right_bar Frame("images/barstuff/bar love.png",10,10)
+#     thumb "images/barstuff/bar thing.png"
+#     thumb_offset 2
+#     xpos(100)
+#     ypos(100)
+#     xysize(10,20)
+
+screen caffection:
+    style_prefix "bar"
+
+    bar value AnimatedValue(caff,7,0.5):
+        ysize 25
+        # xsize 180
+        # xpos 180
+        # ypos 180
+        left_bar Frame("images/barstuff/bar love.png", 10, 10)
+        right_bar Frame("images/barstuff/bar empty.png",10,10)
+
+screen choosep:
+    style_prefix "slider"
+
+    bar value VariableValue("p",6):
+        ysize 50
+        xsize 420
+        xpos 180
+        ypos 180
+
+screen choosea:
+    style_prefix "slider"
+
+    bar value VariableValue("a",6):
+        ysize 50
+        xsize 420
+        xpos 180
+        ypos 280
+
+screen choosew:
+    style_prefix "slider"
+
+    bar value VariableValue("w",6):
+        ysize 50
+        xsize 420
+        xpos 180
+        ypos 380
+
+screen chooseg:
+    style_prefix "slider"
+
+    bar value VariableValue("g",6):
+        ysize 50
+        xsize 420
+        xpos 180
+        ypos 480
+
+screen chooset:
+    style_prefix "slider"
+
+    bar value VariableValue("t",6):
+        ysize 50
+        xsize 420
+        xpos 180
+        ypos 580
+
+screen showp:
+    text "{color=#5c5895}PHYS{/color}" xpos 60 ypos 180 size 40
+screen showps:
+    text "{color=#5c5895}[p+1]{/color}" xpos 620 ypos 180 size 40
+
+
+screen showa:
+    text "{color=#5c5895}ACTS{/color}" xpos 60 ypos 280 size 40
+screen showas:
+    text "{color=#5c5895}[a+1]{/color}" xpos 620 ypos 280 size 40
+
+
+screen showw:
+    text "{color=#5c5895}W0RD{/color}" xpos 60 ypos 380 size 39
+screen showws:
+    text "{color=#5c5895}[w+1]{/color}" xpos 620 ypos 380 size 39
+
+
+screen showg:
+    text "{color=#5c5895}GIFT{/color}" xpos 60 ypos 480 size 40
+screen showgs:
+    text "{color=#5c5895}[g+1]{/color}" xpos 620 ypos 480 size 40
+
+
+screen showt:
+    text "{color=#5c5895}TIME{/color}" xpos 60 ypos 580 size 40
+screen showts:
+    text "{color=#5c5895}[t+1]{/color}" xpos 620 ypos 580 size 40
+
+screen stot:
+    text "{color=#5c5895}TOTAL: [p+a+w+g+t+5]{/color}" xpos 460 ypos 670 size 40
+
+screen parallaxparticles1:
+    add TrackCursor("images/pcls3.png", 20)
